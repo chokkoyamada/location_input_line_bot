@@ -25,7 +25,28 @@ function doGet(e){
         })
     }
     Logger.log(ret);
-    return ContentService.createTextOutput(JSON.stringify(ret) ).setMimeType(ContentService.MimeType.JSON);
+    let geojson = sheet2geojson(ret);
+    return ContentService.createTextOutput(JSON.stringify(geojson) ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sheet2geojson(json_data) {
+    let features = [];
+    json_data.forEach(function(elem, index) {
+        let feature = {
+            "type": "Feature",
+            "properties": elem,
+            "geometry": {"type": "Point", "coordinates": [elem["longitude"], elem["latitude"]]}
+            }
+            features.push(feature)
+        });
+
+    var geojson = {
+        "type": "FeatureCollection",
+        "name": "sheet2geojson",
+        "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }},
+        "features": features
+    }
+    return geojson;
 }
 
 function insertLocation(message) {
