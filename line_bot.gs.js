@@ -12,7 +12,7 @@ function doPost(e) {
 
 function doGet(e) {
     let lastRow = sheet.getLastRow();
-    let data = sheet.getRange(2, 1, lastRow, 5).getValues();
+    let data = sheet.getRange(2, 1, lastRow, 6).getValues();
     Logger.log(data);
     let ret = [];
     for (let x = 0; x < data.length; x++) {
