@@ -1,3 +1,5 @@
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+
 const projectProperties = PropertiesService.getScriptProperties().getProperties()
 const spreadSheet = SpreadsheetApp.openById(projectProperties.SPREADSHEET_ID);
 const sheet = spreadSheet.getSheetByName(projectProperties.SHEET_NAME);
@@ -31,7 +33,7 @@ function doGet(e){
 
 function sheet2geojson(json_data) {
     let features = [];
-    json_data.forEach(function(elem, index) {
+    json_data.forEach(function(elem, _) {
         let feature = {
             "type": "Feature",
             "properties": elem,
@@ -40,13 +42,12 @@ function sheet2geojson(json_data) {
             features.push(feature)
         });
 
-    var geojson = {
+    return {
         "type": "FeatureCollection",
         "name": "sheet2geojson",
-        "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" }},
+        "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}},
         "features": features
-    }
-    return geojson;
+    };
 }
 
 function insertLocation(message) {
@@ -61,27 +62,21 @@ function getCategory(text){
     case "1":
     case "１":
       return "GS";
-      break;
     case "2":
     case "２":
       return "携帯充電";
-      break;
     case "3":
     case "３":
       return "無料Wifi";
-      break;
     case "4":
     case "４":
       return "給水所";
-      break;
     case "5":
     case "５":
       return "自主避難所";
-      break;
     case "6":
     case "６":
       return "入浴施設";
-      break;
     default:
       return text;
   }
@@ -127,6 +122,7 @@ function insertName(message){
 function replyFromSheet(json) {
     let replyUrl = "https://api.line.me/v2/bot/message/reply";
     let replyToken = json.events[0].replyToken;
+    let replyText: string;
 
     let message = json.events[0].message;
     if('latitude' in message){
@@ -150,7 +146,7 @@ function replyFromSheet(json) {
         "messages": messageArray
     };
 
-    const options = {
+    const options: URLFetchRequestOptions = {
         "method" : "post",
         "headers" : headers,
         "payload" : JSON.stringify(postData)
