@@ -84,4 +84,6 @@ Pushed 2 files.
 
 デプロイ完了後、ウェブアプリのURLをコピーし、LINE Botの管理画面でwebhookのURLとして設定する。
 
-2回目以降のデプロイは `npx clasp deploy` でOK
+`clasp deploy` は毎回新しいURLを発行してしまうので、`clasp push`した後はデプロイはウェブ画面から毎回行うのが良い
+
+参考 : [Clasp deploy doesn't update the deployed version with Google Apps Script Web App · Issue #63 · google/clasp](https://github.com/google/clasp/issues/63)
