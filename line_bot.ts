@@ -147,17 +147,35 @@ function insertName(message: TextMessage, userId: string) {
     return "新しく登録したい位置情報を送信してください";
 }
 
-function changeUserLanguage(message: TextMessage, userId: string) {
+function setUserLanguage(message: TextMessage, userId: string) {
     let lastRow = sheet_user.getLastRow();
-    let user = sheet_user.getRange(lastRow + 1, 1)
-    let language = sheet_user.getRange(lastRow + 1, 2)
+
+    //userIdが一致するrowがあるか探す
+    let range = sheet_user.getRange(2,1, lastRow, 2)
+    let userIndex = -1
+    let values = range.getValues()
+    for(let n=0; n< values.length; n++){
+        if(values[n][0] == userId){
+            userIndex = n
+        }
+    }
+    let targetRow: number;
+    if(userIndex !== -1){
+        //userIdが一致するrowがすでにあった場合
+        targetRow = 1 + userIndex + 1;
+    }else{
+        targetRow = lastRow + 1
+    }
+    let userCell = sheet_user.getRange(targetRow, 1)
+    let languageCell = sheet_user.getRange(targetRow, 2)
+
     if (message.text.indexOf("日本語") !== -1) {
-        user.setValue(userId)
-        language.setValue("日本語")
+        userCell.setValue(userId)
+        languageCell.setValue("日本語")
         return '言語を日本語に設定しました。'
     } else if (message.text.indexOf("English") !== -1) {
-        user.setValue(userId)
-        language.setValue("English")
+        userCell.setValue(userId)
+        languageCell.setValue("English")
         return "Language is set to English."
     } else {
         return "その言語には対応していません。対応言語: 日本語, English"
@@ -178,7 +196,7 @@ function replyFromSheet(json) {
         //テキストが送られてきた場合、対応した処理を行う
         Logger.log(message.text)
         if (message.text.indexOf("language") === 0) {
-            replyText = changeUserLanguage(message, userId);
+            replyText = setUserLanguage(message, userId);
         } else {
             replyText = insertName(message, userId);
         }
