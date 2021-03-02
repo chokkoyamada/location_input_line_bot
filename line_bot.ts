@@ -42,7 +42,6 @@ function doPost(e) {
 function doGet(e) {
     let lastRow = sheetLocation.getLastRow();
     let data = sheetLocation.getRange(2, 2, lastRow, 6).getValues();
-    Logger.log(data);
     let ret = [];
     for (let x = 0; x < data.length; x++) {
         ret.push({
@@ -197,7 +196,6 @@ function replyFromSheet(json) {
         replyText = insertLocationData(message, userId);
     } else if ('text' in message) {
         //テキストが送られてきた場合、対応した処理を行う
-        Logger.log(message.text)
         if (message.text.indexOf("language") === 0) {
             replyText = setUserLanguage(message, userId);
         } else {
