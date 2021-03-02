@@ -27,10 +27,12 @@ type LocationMessage = {
     latitude: number
     longitude: number
     address: string
-
 }
 
-
+/**
+ * LINE Botのwebhookのエントリポイント
+ *
+ */
 function doPost(e) {
     if (typeof e === "undefined") {
     } else {
@@ -39,27 +41,31 @@ function doPost(e) {
     }
 }
 
-function doGet(e) {
+/**
+ * シートの内容をGeoJsonにして返すウェブAPI
+ *
+ */
+function doGet(_) {
     let lastRow = sheetLocation.getLastRow();
-    let data = sheetLocation.getRange(2, 2, lastRow, 6).getValues();
-    let ret = [];
-    for (let x = 0; x < data.length; x++) {
-        ret.push({
-            "latitude": data[x][0],
-            "longitude": data[x][1],
-            "address": data[x][2],
-            "name": data[x][3],
-            "name:en": data[x][4],
-            "category": data[x][5]
+    let sheetValues = sheetLocation.getRange(2, 2, lastRow, 6).getValues();
+    let json = [];
+    for (let x = 0; x < sheetValues.length; x++) {
+        json.push({
+            "latitude": sheetValues[x][0],
+            "longitude": sheetValues[x][1],
+            "address": sheetValues[x][2],
+            "name": sheetValues[x][3],
+            "name:en": sheetValues[x][4],
+            "category": sheetValues[x][5]
         })
     }
-    let geojson = sheet2geojson(ret);
-    return ContentService.createTextOutput(JSON.stringify(geojson)).setMimeType(ContentService.MimeType.JSON);
+    let geoJson = makeGeoJson(json);
+    return ContentService.createTextOutput(JSON.stringify(geoJson)).setMimeType(ContentService.MimeType.JSON);
 }
 
-function sheet2geojson(json_data) {
+function makeGeoJson(jsonData) {
     let features = [];
-    json_data.forEach(function (elem, _) {
+    jsonData.forEach(function (elem, _) {
         let feature = {
             "type": "Feature",
             "properties": elem,
@@ -76,34 +82,34 @@ function sheet2geojson(json_data) {
     };
 }
 
-function getTargetRow(targetSheet, userId){
-    let lastRow = targetSheet.getLastRow();
+function getTargetRow(targetSheet, userId): number {
+    let lastRow: number = targetSheet.getLastRow();
     //userIdが一致するrowがあるか探す
-    let range = targetSheet.getRange(2,1, lastRow, 1)
+    let range = targetSheet.getRange(2, 1, lastRow, 1)
     let userIndex = -1
     let values = range.getValues()
-    for(let n=0; n< values.length; n++){
-        if(values[n][0] == userId){
+    for (let n = 0; n < values.length; n++) {
+        if (values[n][0] == userId) {
             userIndex = n
         }
     }
-    let targetRow: number;
-    if(userIndex !== -1){
+    if (userIndex !== -1) {
         //userIdが一致するrowがすでにあった場合
-        targetRow = 1 + userIndex + 1;
-    }else{
-        targetRow = lastRow + 1
+        //ヘッダ行 + インデックス + インデックスは0から始まるので1を足す
+        return 1 + userIndex + 1;
+    } else {
+        //最後のデータ行の次の行
+        return lastRow + 1
     }
-    return targetRow
 }
 
-function insertLocationData(message: LocationMessage, userId: string) {
+function insertLocationData(message: LocationMessage, userId: string): string {
     let lastRow = sheetLocation.getLastRow()
     sheetLocation.getRange(lastRow + 1, 1, 1, 4).setValues([[userId, message.latitude, message.longitude, message.address]]);
     return '場所の名前(日本語)を入力してください';
 }
 
-function getCategory(text) {
+function getCategory(text: string): string {
     switch (text) {
         case "1":
         case "１":
@@ -128,7 +134,7 @@ function getCategory(text) {
     }
 }
 
-function insertAdditionalData(message: TextMessage, userId: string) {
+function insertAdditionalData(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetLocation, userId)
 
     let name = sheetLocation.getRange(targetRow, 5);
@@ -139,34 +145,30 @@ function insertAdditionalData(message: TextMessage, userId: string) {
     let name_en = sheetLocation.getRange(targetRow, 6);
     if (name_en.getValue() === "") {
         name_en.setValue(message.text);
-        let ret = "";
-        ret += 'カテゴリを以下から選んで番号を入力してください。下記にあてはまるものがない場合は自由入力でカテゴリ名を入力してください。';
-        ret += '\n 1 避難所';
-        ret += '\n 2 給水所';
-        ret += '\n 3 入浴施設';
-        ret += '\n 4 携帯充電';
-        ret += '\n 5 無料Wi-Fi';
-        ret += '\n 6 ガソリンスタンド';
-        return ret;
+        return `カテゴリを以下から選んで番号を入力してください。下記にあてはまるものがない場合は自由入力でカテゴリ名を入力してください。
+1 避難所
+2 給水所
+3 入浴施設
+4 携帯充電
+5 無料Wi-Fi
+6 ガソリンスタンド`;
     }
     let category = sheetLocation.getRange(targetRow, 7);
     if (category.getValue() === "") {
         category.setValue(getCategory(message.text));
         let info = sheetLocation.getRange(targetRow, 2, 1, 5).getValues();
-        let ret = '緯度: ' + info[0][0];
-        ret += '\n経度: ' + info[0][1];
-        ret += '\n住所: ' + info[0][2];
-        ret += '\n日本語名: ' + info[0][3];
-        ret += '\n英語名: ' + info[0][4];
-        ret += '\nカテゴリ: ' + getCategory(message.text);
-        ret += '\n';
-        ret += '\n以上の情報を登録しました';
-        return ret;
+        return `緯度: ${info[0][0]}
+経度: ${info[0][1]}
+住所: ${info[0][2]}
+日本語名: ${info[0][3]}
+英語名: ${info[0][4]}
+カテゴリ: ${getCategory(message.text)}
+以上の情報を登録しました`;
     }
     return "新しく登録したい位置情報を送信してください";
 }
 
-function setUserLanguage(message: TextMessage, userId: string) {
+function setUserLanguage(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetUser, userId)
     let userCell = sheetUser.getRange(targetRow, 1)
     let languageCell = sheetUser.getRange(targetRow, 2)
@@ -184,7 +186,7 @@ function setUserLanguage(message: TextMessage, userId: string) {
     }
 }
 
-function replyFromSheet(json) {
+function replyFromSheet(json): void {
     let replyUrl = "https://api.line.me/v2/bot/message/reply";
     let replyToken = json.events[0].replyToken;
     let replyText: string;
@@ -202,8 +204,12 @@ function replyFromSheet(json) {
             replyText = insertAdditionalData(message, userId);
         }
     } else {
-        //何も該当しないので何もしない
-        return;
+        //何も該当しないのでヘルプテキストを返す
+        replyText = `情報を登録するには、位置情報を送信してください。
+
+Send me a "Location" where you would like to register.
+
+The Bot UI uses Japanese, but if you prefer to switch language, enter "language English" to switch to English, or enter "language 日本語" to switch to Japanese.`
     }
 
     let messageArray = [{"type": "text", "text": replyText}];
