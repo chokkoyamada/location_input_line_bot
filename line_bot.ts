@@ -16,8 +16,8 @@ import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOption
 
 const projectProperties = PropertiesService.getScriptProperties().getProperties()
 const spreadSheet = SpreadsheetApp.openById(projectProperties.SPREADSHEET_ID);
-const sheet_location = spreadSheet.getSheetByName(projectProperties.SHEET_NAME);
-const sheet_user = spreadSheet.getSheetByName(projectProperties.SHEET_NAME_USER);
+const sheetLocation = spreadSheet.getSheetByName(projectProperties.SHEET_NAME);
+const sheetUser = spreadSheet.getSheetByName(projectProperties.SHEET_NAME_USER);
 
 type TextMessage = {
     text: string
@@ -40,8 +40,8 @@ function doPost(e) {
 }
 
 function doGet(e) {
-    let lastRow = sheet_location.getLastRow();
-    let data = sheet_location.getRange(2, 2, lastRow, 6).getValues();
+    let lastRow = sheetLocation.getLastRow();
+    let data = sheetLocation.getRange(2, 2, lastRow, 6).getValues();
     Logger.log(data);
     let ret = [];
     for (let x = 0; x < data.length; x++) {
@@ -77,10 +77,30 @@ function sheet2geojson(json_data) {
     };
 }
 
-function insertLocation(message: LocationMessage, userId: string) {
-    let lastRow = sheet_location.getLastRow();
-    //[最後の行の次の行の1カラム目から1x4の領域に指定した情報を入力]
-    sheet_location.getRange(lastRow + 1, 1, 1, 4).setValues([[userId, message.latitude, message.longitude, message.address]]);
+function getTargetRow(targetSheet, userId){
+    let lastRow = targetSheet.getLastRow();
+    //userIdが一致するrowがあるか探す
+    let range = targetSheet.getRange(2,1, lastRow, 1)
+    let userIndex = -1
+    let values = range.getValues()
+    for(let n=0; n< values.length; n++){
+        if(values[n][0] == userId){
+            userIndex = n
+        }
+    }
+    let targetRow: number;
+    if(userIndex !== -1){
+        //userIdが一致するrowがすでにあった場合
+        targetRow = 1 + userIndex + 1;
+    }else{
+        targetRow = lastRow + 1
+    }
+    return targetRow
+}
+
+function insertLocationData(message: LocationMessage, userId: string) {
+    let lastRow = sheetLocation.getLastRow()
+    sheetLocation.getRange(lastRow + 1, 1, 1, 4).setValues([[userId, message.latitude, message.longitude, message.address]]);
     return '場所の名前(日本語)を入力してください';
 }
 
@@ -109,15 +129,15 @@ function getCategory(text) {
     }
 }
 
-function insertName(message: TextMessage, userId: string) {
-    //TODO userIdを含む最後の行を取得する
-    let lastRow = sheet_location.getLastRow();
-    let name = sheet_location.getRange(lastRow, 5);
+function insertAdditionalData(message: TextMessage, userId: string) {
+    let targetRow = getTargetRow(sheetLocation, userId)
+
+    let name = sheetLocation.getRange(targetRow, 5);
     if (name.getValue() === "") {
         name.setValue(message.text);
         return message.text + 'の英語名を入力してください';
     }
-    let name_en = sheet_location.getRange(lastRow, 6);
+    let name_en = sheetLocation.getRange(targetRow, 6);
     if (name_en.getValue() === "") {
         name_en.setValue(message.text);
         let ret = "";
@@ -130,10 +150,10 @@ function insertName(message: TextMessage, userId: string) {
         ret += '\n 6 ガソリンスタンド';
         return ret;
     }
-    let category = sheet_location.getRange(lastRow, 7);
+    let category = sheetLocation.getRange(targetRow, 7);
     if (category.getValue() === "") {
         category.setValue(getCategory(message.text));
-        let info = sheet_location.getRange(lastRow, 2, 1, 5).getValues();
+        let info = sheetLocation.getRange(targetRow, 2, 1, 5).getValues();
         let ret = '緯度: ' + info[0][0];
         ret += '\n経度: ' + info[0][1];
         ret += '\n住所: ' + info[0][2];
@@ -148,26 +168,9 @@ function insertName(message: TextMessage, userId: string) {
 }
 
 function setUserLanguage(message: TextMessage, userId: string) {
-    let lastRow = sheet_user.getLastRow();
-
-    //userIdが一致するrowがあるか探す
-    let range = sheet_user.getRange(2,1, lastRow, 2)
-    let userIndex = -1
-    let values = range.getValues()
-    for(let n=0; n< values.length; n++){
-        if(values[n][0] == userId){
-            userIndex = n
-        }
-    }
-    let targetRow: number;
-    if(userIndex !== -1){
-        //userIdが一致するrowがすでにあった場合
-        targetRow = 1 + userIndex + 1;
-    }else{
-        targetRow = lastRow + 1
-    }
-    let userCell = sheet_user.getRange(targetRow, 1)
-    let languageCell = sheet_user.getRange(targetRow, 2)
+    let targetRow = getTargetRow(sheetUser, userId)
+    let userCell = sheetUser.getRange(targetRow, 1)
+    let languageCell = sheetUser.getRange(targetRow, 2)
 
     if (message.text.indexOf("日本語") !== -1) {
         userCell.setValue(userId)
@@ -191,14 +194,14 @@ function replyFromSheet(json) {
     let userId = json.events[0].source.userId;
     if ('latitude' in message) {
         // 位置情報が送られてきた場合、新規の場所を登録する
-        replyText = insertLocation(message, userId);
+        replyText = insertLocationData(message, userId);
     } else if ('text' in message) {
         //テキストが送られてきた場合、対応した処理を行う
         Logger.log(message.text)
         if (message.text.indexOf("language") === 0) {
             replyText = setUserLanguage(message, userId);
         } else {
-            replyText = insertName(message, userId);
+            replyText = insertAdditionalData(message, userId);
         }
     } else {
         //何も該当しないので何もしない
