@@ -22,14 +22,19 @@ Created new Google Sheets Add-on script: https://script.google.com/d/xxxxxxxxxxx
 ```
 
 * 上記で作成されたスプレッドシートを開いて、
-  - あとで識別しやすいようにシート名をつける(例：mapprint)
+  - `mapprint`シートを作成
   - 1行目にヘッダ行を書き込む。
-    - A列 latitude 
-    - B列 longitude
-    - C列 address
-    - D列 name
-    - E列 name:en
-    - F列 category
+    - A列 line_user_id
+    - B列 latitude
+    - C列 longitude
+    - D列 address
+    - E列 name
+    - F列 name:en
+    - G列 category
+  - `line_user`シートを作成
+  - 1行目にヘッダ行を書き込む。
+    - A列 line_user_id
+    - B列 language
 
 <img width="708" alt="スクリーンショット 2021-02-28 6 44 20" src="https://user-images.githubusercontent.com/843192/109401240-e6d67d00-7990-11eb-9d8f-ab0ed3527303.png">
 
@@ -48,7 +53,7 @@ Pushed 2 files.
 
 `npx clasp open` でプロジェクトを開く。
 
-「以前のエディタを使用」をクリックし、ファイル→プロジェクトのプロパティ→スクリプトのプロパティで以下の3つのプロパティを設定する。
+「以前のエディタを使用」をクリックし、ファイル→プロジェクトのプロパティ→スクリプトのプロパティで以下の4つのプロパティを設定する。
 (この設定項目は新エディタでは2021年2月時点で用意されていないため。この秘匿情報の設定が終わったら元のエディタに戻してしまって問題ない)
 
 <img width="1274" alt="スクリーンショット 2021-02-28 6 53 52" src="https://user-images.githubusercontent.com/843192/109401580-dfb06e80-7992-11eb-92f2-c13bff9b00f3.png">
@@ -63,7 +68,9 @@ Pushed 2 files.
 - SPREADSHEET_ID
   - GoogleSpreadsheetのID ( `https://docs.google.com/spreadsheets/d/(.*)/edit` にあたる部分)
 - SHEET_NAME
-  - シートの名前（上記で例のとおりやったのであれば `mapprint`)
+  - `mapprint`
+- SHEET_NAME_USER
+  - `line_user`
 
 * デプロイする。
 
