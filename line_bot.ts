@@ -88,22 +88,22 @@ function getCategory(text) {
     switch (text) {
         case "1":
         case "１":
-            return "GS";
+            return "避難所";
         case "2":
         case "２":
-            return "携帯充電";
+            return "給水所";
         case "3":
         case "３":
-            return "無料Wifi";
+            return "入浴施設";
         case "4":
         case "４":
-            return "給水所";
+            return "携帯充電";
         case "5":
         case "５":
-            return "自主避難所";
+            return "無料Wi-Fi";
         case "6":
         case "６":
-            return "入浴施設";
+            return "ガソリンスタンド";
         default:
             return text;
     }
@@ -122,12 +122,12 @@ function insertName(message: TextMessage, userId: string) {
         name_en.setValue(message.text);
         let ret = "";
         ret += 'カテゴリを以下から選んで番号を入力してください。下記にあてはまるものがない場合は自由入力でカテゴリ名を入力してください。';
-        ret += '\n 1 ガソリンスタンド';
-        ret += '\n 2 携帯充電';
-        ret += '\n 3 無料Wifi';
-        ret += '\n 4 給水所';
-        ret += '\n 5 自主避難所';
-        ret += '\n 6 入浴施設';
+        ret += '\n 1 避難所';
+        ret += '\n 2 給水所';
+        ret += '\n 3 入浴施設';
+        ret += '\n 4 携帯充電';
+        ret += '\n 5 無料Wi-Fi';
+        ret += '\n 6 ガソリンスタンド';
         return ret;
     }
     let category = sheet_location.getRange(lastRow, 7);
