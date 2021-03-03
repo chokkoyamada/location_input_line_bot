@@ -140,7 +140,6 @@ function getCategory(text: string): string {
 function insertAdditionalData(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetLocation, userId)
 
-
     let name = sheetLocation.getRange(targetRow, 7);
     if (name.getValue() === "") {
         name.setValue(message.text);
