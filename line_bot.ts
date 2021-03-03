@@ -139,6 +139,8 @@ function getCategory(text: string): string {
 
 function insertAdditionalData(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetLocation, userId)
+    let confirmed = sheetLocation.getRange(targetRow, 6);
+    confirmed.setValue('未確認');
 
     let name = sheetLocation.getRange(targetRow, 7);
     if (name.getValue() === "") {
