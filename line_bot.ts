@@ -4,9 +4,11 @@
     B: latitude
     C: longitude
     D: address
-    E: name
-    F: name:en
-    G: category
+    E: category
+    F: confirmed
+    G: name
+    H: name:en
+    I以降 多言語対応のために使う
 
     line_userシートのcolumn
     A: line_user_id
@@ -54,9 +56,10 @@ function doGet(_) {
             "latitude": sheetValues[x][0],
             "longitude": sheetValues[x][1],
             "address": sheetValues[x][2],
-            "name": sheetValues[x][3],
-            "name:en": sheetValues[x][4],
-            "category": sheetValues[x][5]
+            "category": sheetValues[x][3],
+            "confirmed": sheetValues[x][4],
+            "name": sheetValues[x][5],
+            "name:en": sheetValues[x][6]
         })
     }
     let geoJson = makeGeoJson(json);
@@ -137,12 +140,13 @@ function getCategory(text: string): string {
 function insertAdditionalData(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetLocation, userId)
 
-    let name = sheetLocation.getRange(targetRow, 5);
+
+    let name = sheetLocation.getRange(targetRow, 7);
     if (name.getValue() === "") {
         name.setValue(message.text);
         return message.text + 'の英語名を入力してください';
     }
-    let name_en = sheetLocation.getRange(targetRow, 6);
+    let name_en = sheetLocation.getRange(targetRow, 8);
     if (name_en.getValue() === "") {
         name_en.setValue(message.text);
         return `カテゴリを以下から選んで番号を入力してください。下記にあてはまるものがない場合は自由入力でカテゴリ名を入力してください。
@@ -153,15 +157,15 @@ function insertAdditionalData(message: TextMessage, userId: string): string {
 5 無料Wi-Fi
 6 ガソリンスタンド`;
     }
-    let category = sheetLocation.getRange(targetRow, 7);
+    let category = sheetLocation.getRange(targetRow, 5);
     if (category.getValue() === "") {
         category.setValue(getCategory(message.text));
-        let info = sheetLocation.getRange(targetRow, 2, 1, 5).getValues();
+        let info = sheetLocation.getRange(targetRow, 2, 1, 7).getValues();
         return `緯度: ${info[0][0]}
 経度: ${info[0][1]}
 住所: ${info[0][2]}
-日本語名: ${info[0][3]}
-英語名: ${info[0][4]}
+日本語名: ${info[0][5]}
+英語名: ${info[0][6]}
 カテゴリ: ${getCategory(message.text)}
 以上の情報を登録しました`;
     }
