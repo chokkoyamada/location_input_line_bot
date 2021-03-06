@@ -65,13 +65,13 @@ function doGet(_) {
     let json = [];
     for (let x = 0; x < sheetValues.length; x++) {
         json.push({
-            "latitude": sheetValues[x][COLUMN_latitude],
-            "longitude": sheetValues[x][COLUMN_longitude],
-            "address": sheetValues[x][COLUMN_address],
-            "category": sheetValues[x][COLUMN_category],
-            "confirmed": sheetValues[x][COLUMN_confirmed],
-            "name": sheetValues[x][COLUMN_name],
-            "name:en": sheetValues[x][COLUMN_name_en]
+            "latitude": sheetValues[x][COLUMN_latitude-1],
+            "longitude": sheetValues[x][COLUMN_longitude-1],
+            "address": sheetValues[x][COLUMN_address-1],
+            "category": sheetValues[x][COLUMN_category-1],
+            "confirmed": sheetValues[x][COLUMN_confirmed-1],
+            "name": sheetValues[x][COLUMN_name-1],
+            "name:en": sheetValues[x][COLUMN_name_en-1]
         })
     }
     let geoJson = makeGeoJson(json);
@@ -177,11 +177,11 @@ function insertAdditionalData(message: TextMessage, userId: string): string {
     if (category.getValue() === "") {
         category.setValue(getCategory(message.text));
         let info = sheetLocation.getRange(targetRow, 1, 1, 8).getValues();
-        return `緯度: ${info[0][COLUMN_latitude]}
-経度: ${info[0][COLUMN_longitude]}
-住所: ${info[0][COLUMN_address]}
-日本語名: ${info[0][COLUMN_name]}
-英語名: ${info[0][COLUMN_name_en]}
+        return `緯度: ${info[0][COLUMN_latitude-1]}
+経度: ${info[0][COLUMN_longitude-1]}
+住所: ${info[0][COLUMN_address-1]}
+日本語名: ${info[0][COLUMN_name-1]}
+英語名: ${info[0][COLUMN_name_en-1]}
 カテゴリ: ${getCategory(message.text)}
 以上の情報を登録しました`;
     }
