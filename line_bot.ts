@@ -60,10 +60,14 @@ function doPost(e) {
  *
  */
 function doGet(_) {
+    const params = _.values;
     let lastRow = sheetLocation.getLastRow();
     let sheetValues = sheetLocation.getRange(2, 1, lastRow, 6).getValues();
     let json = [];
     for (let x = 0; x < sheetValues.length; x++) {
+        if (params.confirmed && sheetValues[x][4] !== "確認済み") {
+            continue;
+        }
         json.push({
             "latitude": sheetValues[x][COLUMN_latitude-1],
             "longitude": sheetValues[x][COLUMN_longitude-1],
