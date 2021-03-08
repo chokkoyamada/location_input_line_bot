@@ -1,3 +1,5 @@
+import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+
 /*
     mapprintシートのcolumn
     A: line_user_id
@@ -9,12 +11,22 @@
     G: name
     H: name:en
     I以降 多言語対応のために使う
+ */
+const COLUMN_line_user_id = 1;
+const COLUMN_latitude = 2;
+const COLUMN_longitude = 3;
+const COLUMN_address = 4;
+const COLUMN_category = 5;
+const COLUMN_confirmed = 6;
+const COLUMN_name = 7;
+const COLUMN_name_en = 8;
 
+/*
     line_userシートのcolumn
     A: line_user_id
     B: language
  */
-import URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
+const COLUMN_language = 2;
 
 const projectProperties = PropertiesService.getScriptProperties().getProperties()
 const spreadSheet = SpreadsheetApp.openById(projectProperties.SPREADSHEET_ID);
@@ -49,17 +61,17 @@ function doPost(e) {
  */
 function doGet(_) {
     let lastRow = sheetLocation.getLastRow();
-    let sheetValues = sheetLocation.getRange(2, 2, lastRow, 6).getValues();
+    let sheetValues = sheetLocation.getRange(2, 1, lastRow, 6).getValues();
     let json = [];
     for (let x = 0; x < sheetValues.length; x++) {
         json.push({
-            "latitude": sheetValues[x][0],
-            "longitude": sheetValues[x][1],
-            "address": sheetValues[x][2],
-            "category": sheetValues[x][3],
-            "confirmed": sheetValues[x][4],
-            "name": sheetValues[x][5],
-            "name:en": sheetValues[x][6]
+            "latitude": sheetValues[x][COLUMN_latitude-1],
+            "longitude": sheetValues[x][COLUMN_longitude-1],
+            "address": sheetValues[x][COLUMN_address-1],
+            "category": sheetValues[x][COLUMN_category-1],
+            "confirmed": sheetValues[x][COLUMN_confirmed-1],
+            "name": sheetValues[x][COLUMN_name-1],
+            "name:en": sheetValues[x][COLUMN_name_en-1]
         })
     }
     let geoJson = makeGeoJson(json);
@@ -108,7 +120,10 @@ function getTargetRow(targetSheet, userId): number {
 
 function insertLocationData(message: LocationMessage, userId: string): string {
     let lastRow = sheetLocation.getLastRow()
-    sheetLocation.getRange(lastRow + 1, 1, 1, 4).setValues([[userId, message.latitude, message.longitude, message.address]]);
+    sheetLocation.getRange(lastRow + 1, COLUMN_line_user_id).setValue(userId);
+    sheetLocation.getRange(lastRow + 1, COLUMN_latitude).setValue(message.latitude);
+    sheetLocation.getRange(lastRow + 1, COLUMN_longitude).setValues(message.longitude);
+    sheetLocation.getRange(lastRow + 1, COLUMN_address).setValue(message.address);
     return '場所の名前(日本語)を入力してください';
 }
 
@@ -139,15 +154,15 @@ function getCategory(text: string): string {
 
 function insertAdditionalData(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetLocation, userId)
-    let confirmed = sheetLocation.getRange(targetRow, 6);
+    let confirmed = sheetLocation.getRange(targetRow, COLUMN_confirmed);
     confirmed.setValue('未確認');
 
-    let name = sheetLocation.getRange(targetRow, 7);
+    let name = sheetLocation.getRange(targetRow, COLUMN_name);
     if (name.getValue() === "") {
         name.setValue(message.text);
         return message.text + 'の英語名を入力してください';
     }
-    let name_en = sheetLocation.getRange(targetRow, 8);
+    let name_en = sheetLocation.getRange(targetRow, COLUMN_name_en);
     if (name_en.getValue() === "") {
         name_en.setValue(message.text);
         return `カテゴリを以下から選んで番号を入力してください。下記にあてはまるものがない場合は自由入力でカテゴリ名を入力してください。
@@ -158,15 +173,15 @@ function insertAdditionalData(message: TextMessage, userId: string): string {
 5 無料Wi-Fi
 6 ガソリンスタンド`;
     }
-    let category = sheetLocation.getRange(targetRow, 5);
+    let category = sheetLocation.getRange(targetRow, COLUMN_category);
     if (category.getValue() === "") {
         category.setValue(getCategory(message.text));
-        let info = sheetLocation.getRange(targetRow, 2, 1, 7).getValues();
-        return `緯度: ${info[0][0]}
-経度: ${info[0][1]}
-住所: ${info[0][2]}
-日本語名: ${info[0][5]}
-英語名: ${info[0][6]}
+        let info = sheetLocation.getRange(targetRow, 1, 1, 8).getValues();
+        return `緯度: ${info[0][COLUMN_latitude-1]}
+経度: ${info[0][COLUMN_longitude-1]}
+住所: ${info[0][COLUMN_address-1]}
+日本語名: ${info[0][COLUMN_name-1]}
+英語名: ${info[0][COLUMN_name_en-1]}
 カテゴリ: ${getCategory(message.text)}
 以上の情報を登録しました`;
     }
@@ -175,8 +190,8 @@ function insertAdditionalData(message: TextMessage, userId: string): string {
 
 function setUserLanguage(message: TextMessage, userId: string): string {
     let targetRow = getTargetRow(sheetUser, userId)
-    let userCell = sheetUser.getRange(targetRow, 1)
-    let languageCell = sheetUser.getRange(targetRow, 2)
+    let userCell = sheetUser.getRange(targetRow, COLUMN_line_user_id)
+    let languageCell = sheetUser.getRange(targetRow, COLUMN_language)
 
     if (message.text.indexOf("日本語") !== -1) {
         userCell.setValue(userId)
