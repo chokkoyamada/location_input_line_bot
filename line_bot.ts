@@ -126,7 +126,7 @@ function insertLocationData(message: LocationMessage, userId: string): string {
     let lastRow = sheetLocation.getLastRow()
     sheetLocation.getRange(lastRow + 1, COLUMN_line_user_id).setValue(userId);
     sheetLocation.getRange(lastRow + 1, COLUMN_latitude).setValue(message.latitude);
-    sheetLocation.getRange(lastRow + 1, COLUMN_longitude).setValues(message.longitude);
+    sheetLocation.getRange(lastRow + 1, COLUMN_longitude).setValue(message.longitude);
     sheetLocation.getRange(lastRow + 1, COLUMN_address).setValue(message.address);
     return '場所の名前(日本語)を入力してください';
 }
