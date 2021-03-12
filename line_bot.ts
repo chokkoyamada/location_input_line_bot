@@ -60,7 +60,7 @@ function doPost(e) {
  *
  */
 function doGet(_) {
-    const params = _.values;
+    const params = _.parameter;
     let lastRow = sheetLocation.getLastRow();
     let sheetValues = sheetLocation.getRange(2, 1, lastRow, 6).getValues();
     let json = [];
