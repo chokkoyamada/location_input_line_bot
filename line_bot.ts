@@ -62,7 +62,7 @@ function doPost(e) {
 function doGet(_) {
     const params = _.parameter;
     let lastRow = sheetLocation.getLastRow();
-    let sheetValues = sheetLocation.getRange(2, 1, lastRow, 6).getValues();
+    let sheetValues = sheetLocation.getRange(2, 1, lastRow, 8).getValues();
     let json = [];
     for (let x = 0; x < sheetValues.length; x++) {
         if (params.confirmed && sheetValues[x][COLUMN_confirmed-1] !== "確認済み") {
